@@ -78,8 +78,4 @@ public class CryptoWalletService {
     public Account deleteAccount(String accId) {
         return accounts.remove(accId);
     }
-
-
-
-
 }
