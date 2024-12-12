@@ -1,6 +1,6 @@
 package com.ak.CryptoWallet.services;
 
-import com.ak.CryptoWallet.entity.CryptoAccount;
+import com.ak.CryptoWallet.entity.Account;
 import com.ak.CryptoWallet.entity.Transaction;
 import org.springframework.stereotype.Service;
 
@@ -10,42 +10,44 @@ import java.util.stream.Collectors;
 @Service
 public class CryptoWalletService {
 
-    //питання НЕ до теми пояснити на чому всередині та як працює ArrayList
-    //private List<Transaction> transactions = new ArrayList<>();
-    private Map<String, Transaction> transactions = new HashMap<>();
+    // key = AccountId(String), value = Account
+    // дабавити exceptions to methods
+    private Map<String, Account> accounts = new HashMap<>();
 
-    CryptoAccount ca = new CryptoAccount();
-
-    public CryptoWalletService() {
-        ca.setBalance(1700.00);
-        ca.setCurrency("EUR");
+    public Account getCryptoAccount(String id) {
+        if (accounts.containsKey(id)) {
+            return accounts.get(id);
+        }
+        throw new IllegalArgumentException("Account with id " + id + " not found");
     }
 
-    public CryptoAccount getCryptoAccount() {
-        return ca;
-    }
+    public Transaction proccesTransaction(String accId, Transaction transaction) {
 
-    public Transaction proccesTransaction(Transaction transaction) {
-        ca.setBalance(ca.getBalance() + transaction.getAmount());
+        Account account = getCryptoAccount(accId);
+
+        account.setBalance(account.getBalance() + transaction.getAmount());
         transaction.setId(UUID.randomUUID().toString());
-        transactions.put(transaction.getId(), transaction);
+        account.getTransactions().put(transaction.getId(), transaction);
         return transaction;
 
     }
 
-    public List<Transaction> getTransactions() {
-        return transactions.values().stream().collect(Collectors.toList());
+    public List<Transaction> getTransactions(String accId) {
+        return getCryptoAccount(accId).getTransactions().values().stream().collect(Collectors.toList());
     }
 
-    public Transaction updateTransaction(String id, Transaction newTrx) {
+    public Transaction updateTransaction(String accId, String trxId, Transaction newTrx) {
 
-        if (transactions.containsKey(id)) {
+        Account account = getCryptoAccount(accId);
+
+        if (account.getTransactions().containsKey(trxId)) {
+
             /// T1 FIND
-            Transaction oldTrx = transactions.get(id);
+            Transaction oldTrx = account.getTransactions().get(trxId);
 
             /// T2 Revert and Update Balance
-            ca.setBalance(ca.getBalance() - oldTrx.getAmount());
-            ca.setBalance(ca.getBalance() + newTrx.getAmount());
+            account.setBalance(account.getBalance() - oldTrx.getAmount());
+            account.setBalance(account.getBalance() + newTrx.getAmount());
 
             /// T3 Update old trx
             oldTrx.setAmount(newTrx.getAmount());
@@ -54,12 +56,30 @@ public class CryptoWalletService {
 
         throw new IllegalArgumentException("Transaction not found");
     }
-    //попросити розказати структуру
 
-    // що повинен повертати метод ? він повинен показувати транзакцію яку ми видалили, чи void і нічого не повертати
-    // зробив так, щоб повертало транзакцію яку видалило
-    public Transaction deleteTransaction(String id) {
-        return transactions.remove(id);
+    public Transaction deleteTransaction(String accId, String trxId) {
+
+        Account account = getCryptoAccount(accId);
+
+        Transaction oldTrx = account.getTransactions().get(trxId);
+        account.setBalance(account.getBalance() - oldTrx.getAmount());
+
+        return account.getTransactions().remove(trxId);
     }
+
+    public Account createAccount(Account account) {
+
+        account.setId(UUID.randomUUID().toString());
+        accounts.put(account.getId(), account);
+
+        return account;
+    }
+
+    public Account deleteAccount(String accId) {
+        return accounts.remove(accId);
+    }
+
+
+
 
 }
