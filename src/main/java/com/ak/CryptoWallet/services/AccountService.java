@@ -10,13 +10,13 @@ public class AccountService {
 
     // дабавити exceptions to methods
 
-    private List<Account> accaunts = new ArrayList<>();
+
     // key = AccountId(String), value = Account
-    //private Map<String, Account> accounts = new HashMap<>();
+    private Map<String, Account> accounts = new HashMap<>();
 
     public Account getCryptoAccount(String id) {
-        if (accaunts.contains(id)) {
-            return accaunts.get(accaunts.indexOf(id));
+        if (accounts.containsKey(id)) {
+            return accounts.get(id);
         }
         throw new IllegalArgumentException("Account with id " + id + " not found");
     }
@@ -24,16 +24,17 @@ public class AccountService {
     public Account createAccount(Account account) {
 
         account.setId(UUID.randomUUID().toString());
-        accaunts.add(account);
+        accounts.put(account.getId(), account);
 
         return account;
     }
 
     public Account deleteAccount(String id) {
-        if (accaunts.contains(id)) {
-            accaunts.remove(id);
-            return accaunts.get(accaunts.indexOf(id));
+        if (accounts.containsKey(id)) {
+            Account account = accounts.get(id);
+            accounts.remove(id);
         }
+
         throw new IllegalArgumentException("Account with id " + id + " not found");
     }
 }
