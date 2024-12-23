@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -15,50 +14,68 @@ public class TransactionService {
     @Autowired
     private AccountService accountService;
 
-
     public Transaction proccesTransaction(String accId, Transaction transaction) {
 
         Account account = accountService.getCryptoAccount(accId);
 
         account.setBalance(account.getBalance() + transaction.getAmount());
         transaction.setId(UUID.randomUUID().toString());
-        account.getTransactions().put(transaction.getId(), transaction);
+        account.getTransactions().add(transaction);
+//        account.getTransactions().put(transaction.getId(), transaction);
         return transaction;
 
     }
 
     public List<Transaction> getTransactions(String accId) {
-        return accountService.getCryptoAccount(accId).getTransactions().values().stream().collect(Collectors.toList());
+        Account account = accountService.getCryptoAccount(accId);
+        return account.getTransactions();
+        //return accountService.getCryptoAccount(accId).getTransactions().values().stream().collect(Collectors.toList());
     }
 
+    // input needs
+    // accId = account ID, trxId = transaction ID, newTrx = updated transaction
+    ///rev
     public Transaction updateTransaction(String accId, String trxId, Transaction newTrx) {
 
         Account account = accountService.getCryptoAccount(accId);
 
-        if (account.getTransactions().containsKey(trxId)) {
+        /// T1 FIND
+        Transaction updateTrx = account.getTransactions().stream()
+                .filter(transaction -> transaction.getId().equals(trxId))
+                .findFirst()
+                .orElse(null);
 
-            /// T1 FIND
-            Transaction oldTrx = account.getTransactions().get(trxId);
+        /// T2 Revert and Update Balance
+        if (updateTrx != null) {
 
-            /// T2 Revert and Update Balance
-            account.setBalance(account.getBalance() - oldTrx.getAmount());
+            account.setBalance(account.getBalance() - updateTrx.getAmount());
+
             account.setBalance(account.getBalance() + newTrx.getAmount());
-
-            /// T3 Update old trx
-            oldTrx.setAmount(newTrx.getAmount());
-            return oldTrx;
         }
 
-        throw new IllegalArgumentException("Transaction not found");
+        /// T3 Update old trx
+        updateTrx.setAmount(newTrx.getAmount());
+
+        return updateTrx;
+
     }
 
+    /// rev
     public Transaction deleteTransaction(String accId, String trxId) {
 
         Account account = accountService.getCryptoAccount(accId);
 
-        Transaction oldTrx = account.getTransactions().get(trxId);
-        account.setBalance(account.getBalance() - oldTrx.getAmount());
+        Transaction trxDell = account.getTransactions().stream()
+                .filter(transaction -> transaction.getId().equals(trxId))
+                .findFirst()
+                .orElse(null);
 
-        return account.getTransactions().remove(trxId);
+        if (trxDell != null) {
+            account.getTransactions().remove(trxDell);
+
+            account.setBalance(account.getBalance() - trxDell.getAmount());
+        }
+
+        return trxDell;
     }
 }

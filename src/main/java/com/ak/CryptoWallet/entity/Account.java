@@ -1,6 +1,8 @@
 package com.ak.CryptoWallet.entity;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 //@Getter
@@ -11,14 +13,14 @@ public class Account {
     private double balance;
     private String currency;
 
-    private Map<String, Transaction> transactions = new HashMap<>();
+    //private Map<String, Transaction> transactions = new HashMap<>();
+    private List<Transaction> transactions = new ArrayList<Transaction>();
 
-
-    public Map<String, Transaction> getTransactions() {
+    public List<Transaction> getTransactions() {
         return transactions;
     }
 
-    public void setTransactions(Map<String, Transaction> transactions) {
+    public void setTransactions(List<Transaction> transactions) {
         this.transactions = transactions;
     }
 
